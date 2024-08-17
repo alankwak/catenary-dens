@@ -1,4 +1,4 @@
-# catenary-dens v1.0.0
+# catenary-solver v1.0.0
 Python program for finding catenary shapes and mass densities
 
 This program was created as a part of the Summer Undergraduate Reasearch Experience at Carthage College. The goal of the project was to answer the question "Is it possible to find the mass density of a hanging cable given its shape?", which is the inverse of the normal "forward" problem that asks if it is possible to find the shape of a hanging cable given its mass density. The program contains functions that compute the answers to both the forward problem and the inverse problem.
@@ -83,3 +83,56 @@ plt.plot(cat.x, cat.y)
 ![image](https://github.com/user-attachments/assets/6b519b9a-6063-4527-8b60-b71ec1d5953e)
 
 ## For the Inverse Problem
+
+The following functions are designed to take in the shape of a catenary curve and output an 2D array representing arc length vs density for that shape if it was hung from its ends.
+
+### dens_from_spline() 
+-- outputs arc length vs density when given a spline that starts at x=0 and ends at x=xdist, output is of the form = [arc length array, density array]
+| parameter, type         |description   |
+|-----------------------------|----------------------|
+|   spline:        | any spline-related object from scipy.interpolate(), models the curve that we want to know the mass density of |
+|   xdist, float:  | the last x-value of the spline/curve, used to define the range to create (x, y) points from the spline |
+
+dens_from_spline() is situational in that you need to have a spline representation of the curve on hand. However, it is also the most useful because it can process shapes that do not easily fit common functions such as x^2 or sin(x). The ideal use for this function would be to take in a spline that was generated using points on a real-life image of a catenary shape. While slightly redundant, here is an example using the curve that was generated in the previous section.
+```{python}
+import scipy.interpolate as spi
+
+splcat = spi.InterpolatedUnivariateSpline(cat.x, cat.y)
+s, d = dens_from_spline(splcat, cat.x[-1])
+plt.plot(s, d)
+plt.xlabel('Arc Length')
+plt.ylabel('Mass Density')
+```
+![image](https://github.com/user-attachments/assets/d041a557-7c87-4411-ad80-3a1f25493801)
+
+You will probably notice that the density that was found does not perfectly match the density we defined earlier (with a density equal to arc length, you would imagine the graph to be a straight line from (0, 0) to (5, 5). This is due to an underlying property of catenaries in which the shape that is created is the same for all scalar multiples of a certain density function. In other words, a cable with a density of 5 * s will make the same shape as a cable with a density of 1 * s, assuming length, x distance, and y distance stay the same. The found arc length vs density follows this rule, which can be proved through this code:
+```{python}
+# c = scalar multiple of user-defined density, e.g. found density from dens_from_spline() = c * density used to generate curve
+c = density2(5)/d[-1]
+# two plots below should overlap as long as density does not start at 0
+plt.plot(s, [c*d[i] for i in range(len(s))], label='found density, scaled to original')
+plt.plot(s, [density2(s[i]) for i in range(len(s))], linestyle='dashed', label='original density')
+```
+![image](https://github.com/user-attachments/assets/b9459df7-b233-442c-af23-8edca39f5c44)
+
+### dens_from_eq() 
+-- outputs arc length vs density when an exact function for the shape of the curve is known, also prints the equation of the x-coordinate vs density curve (**NOT** arc length vs density)
+| parameter, type         |description   |
+|-----------------------------|----------------------|
+|   x, sympy.Symbol: |  x-variable in the equation of the curve |
+|   shape:             |  expression that defines the shape of the curve, e.g. shape = (x-1)**2 |
+|   xdist:             |  the last x-value to be evaluated on the shape/curve, used to define the range to create (x, y) points on the shape |
+
+dens_from_eq() is useful if you know the shape that you want the hanging cable to make follows an easily defined function. Note that the function should start at x = 0, so you may need to shift the function using function transformations. The program will also output a warning message if the shape is not possible in the real world due to requiring negative density, but will still give a theoretical output. This is because the second derivative of the shape is negative at some point on the curve over the area being evaluated.
+
+As an example, let's model the density that a cable would need to have in order to form the shape of a sin curve. In particular, we want the portion of sin(x) from pi to 2 * pi because this section is possible in the real world.
+```{python}
+x = sym.Symbol('x')
+s, d = dens_from_eq(x, sym.sin(x+math.pi), math.pi)
+plt.plot(s, d)
+plt.xlabel('Arc Length')
+plt.ylabel('Mass Density')
+```
+![image](https://github.com/user-attachments/assets/18789551-e87d-4036-9140-433fed41e1b9)
+
+Thats all for now! More functionality may be added in the future.
