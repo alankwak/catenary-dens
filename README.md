@@ -3,6 +3,11 @@ This program was created as a part of the Summer Undergraduate Reasearch Experie
 
 Here are the main modules within the program and how to use them.
 
+NOTE: This project is available as a package on PyPI and can be downloaded using
+```{shell}
+$ pip install catenary-solver
+```
+
 ## For the Forward Problem
 
 These modules find the shape a cable would make if hung from its ends given horizontal distance between the ends, the vertical distance between the ends, the length of the cable, and the mass density of the cable with respect to arc length. There are two more parameters that are brute-forced to create the desired curve. These are the initial slope of the curve, as well as the horizonal tension in the curve.
