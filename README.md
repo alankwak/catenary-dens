@@ -87,7 +87,7 @@ plt.plot(cat.x, cat.y)
 The following modules are designed to take in the shape of a catenary curve and output an 2D array representing arc length vs density for that shape if it was hung from its ends.
 
 ### catsolver.inverse.dens_from_spline(spline, xrange, type="hanging) 
--- outputs arc length vs density when given a spline that starts at x=0 and ends at x=xdist, output is of the form = [arc length array, density array]
+-- outputs arc length vs density when given a spline, output is of the form = [arc length array, density array]
 | parameter, type         |description   |
 |-----------------------------|----------------------|
 |   spline:        | any spline-related object from scipy.interpolate(), models the curve that we want to know the mass density of |
