@@ -1,20 +1,13 @@
-# catenary-solver v1.0.0
-Python program for finding catenary shapes and mass densities
+# catenary-solver v1.0.1
+This program was created as a part of the Summer Undergraduate Reasearch Experience at Carthage College. The goal of the project was to answer the question "Is it possible to find the mass density of a hanging cable given its shape?", which is the inverse of the normal "forward" problem that asks if it is possible to find the shape of a hanging cable given its mass density. The program contains modules that compute the answers to both the forward problem and the inverse problem.
 
-This program was created as a part of the Summer Undergraduate Reasearch Experience at Carthage College. The goal of the project was to answer the question "Is it possible to find the mass density of a hanging cable given its shape?", which is the inverse of the normal "forward" problem that asks if it is possible to find the shape of a hanging cable given its mass density. The program contains functions that compute the answers to both the forward problem and the inverse problem.
-
-dependencies:
-- numpy
-- scipy
-- sympy, if using dens_from_eq()
-
-The full source code is provided with annotations on how to use each function, and what is happening as the program runs. For convenience, here are the main functions within the program and how to use them.
-
-These functions find the shape a cable would make if hung from its ends given horizontal distance between the ends, the vertical distance between the ends, the length of the cable, and the mass density of the cable with respect to arc length. There are two more parameters that are brute-forced to create the desired curve. These are the initial slope of the curve, as well as the horizonal tension in the curve.
+Here are the main modules within the program and how to use them.
 
 ## For the Forward Problem
 
-### find_parameters() 
+These modules find the shape a cable would make if hung from its ends given horizontal distance between the ends, the vertical distance between the ends, the length of the cable, and the mass density of the cable with respect to arc length. There are two more parameters that are brute-forced to create the desired curve. These are the initial slope of the curve, as well as the horizonal tension in the curve.
+
+### catsolver.forward.find_parameters(dens, xdist, ydist, length) 
 -- Main function to brute force h (horizontal tension / 9.8) and the initial slope of a desired cable, given characteristics of the curve
 | required/optional           |parameter, type       | description                                                                                                        |
 |-----------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|  
@@ -29,7 +22,7 @@ These functions find the shape a cable would make if hung from its ends given ho
 |  optional, default=False    | debug, boolean:      | if set to True, prints information about each curve generated while searching for the correct curve |
 |  optional, default=hanging  | type, function:      | specifies if the free-hanging or loaded cable function should be used to solve the differential equation |
 
-### find_catenary(dens, xdist, ydist, length, thresh=.01, max_attempts=500, debug=False) 
+### catsolver.forward.find_catenary(dens, xdist, ydist, length, thresh=.01, max_attempts=500, debug=False) 
 -- Essentially calls find_parameters() with specific arguments to make compute time faster using scaling. Used to find the shape of a free-hanging cable.
 | required/optional           |parameter, type       | description                                                                                                        |
 |-----------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|  
@@ -42,11 +35,11 @@ the program to count a curve as successful, lower values take longer/more loops 
 | optional, default=500       | max_attempts, int:   | the maximum number of loops/curves to generate in an attempt to find the desired curve |
 |  optional, default=False    |  debug, boolean:     |  if set to True, prints information about each curve generated while searching for the correct curve |
 
-### find_loaded_catenary(dens, xdist, ydist, length, thresh=.01, max_attempts=500, debug=False)  
+### catsolver.forward.find_loaded_catenary(dens, xdist, ydist, length, thresh=.01, max_attempts=500, debug=False)  
 -- the exact same as find_catenary(), but uses type=loaded in the find_parameters() function call to solve the loaded cable diff eq (e.g. for a cable supporting a road directly beneath it)
 
 ### CatSolution Object
-All three of these functions return a ```CatSolution``` object, which has the following members:
+All three of these modules return a ```CatSolution``` object, which has the following members:
 | member         |description   |
 |-----------------------------|----------------------|
 |             status, int:     | -1 = failed, desired cable length is not long enough to reach desired cable endpoint   
@@ -71,6 +64,8 @@ def density2(s):
 ```
 The resulting shape could then be obtained and plotted through
 ```{python}
+from catsolver.forward import find_catenary
+
 cat = find_catenary(density2, 3, 1, 5)
 ```
 You can print the ```CatSolution``` object to output relevant information about the curve as well as plot what the resulting curve looks like with any plotting package. For example,
@@ -84,28 +79,30 @@ plt.plot(cat.x, cat.y)
 
 ## For the Inverse Problem
 
-The following functions are designed to take in the shape of a catenary curve and output an 2D array representing arc length vs density for that shape if it was hung from its ends.
+The following modules are designed to take in the shape of a catenary curve and output an 2D array representing arc length vs density for that shape if it was hung from its ends.
 
-### dens_from_spline() 
+### catsolver.inverse.dens_from_spline(spline, xrange, type="hanging) 
 -- outputs arc length vs density when given a spline that starts at x=0 and ends at x=xdist, output is of the form = [arc length array, density array]
 | parameter, type         |description   |
 |-----------------------------|----------------------|
 |   spline:        | any spline-related object from scipy.interpolate(), models the curve that we want to know the mass density of |
-|   xdist, float:  | the last x-value of the spline/curve, used to define the range to create (x, y) points from the spline |
+|   xrange, array of 2 floats:  | the first and last x-value of the spline/curve, used to define the range to create (x, y) points from the spline |
+|   type, string:      | either "loaded" or "hanging", depending on the type of catenary you want to find the shape for. default = "hanging" |
 
 dens_from_spline() is situational in that you need to have a spline representation of the curve on hand. However, it is also the most useful because it can process shapes that do not easily fit common functions such as x^2 or sin(x). The ideal use for this function would be to take in a spline that was generated using points on a real-life image of a catenary shape. While slightly redundant, here is an example using the curve that was generated in the previous section.
 ```{python}
 import scipy.interpolate as spi
+from catsolver.inverse import dens_from_spline
 
 splcat = spi.InterpolatedUnivariateSpline(cat.x, cat.y)
-s, d = dens_from_spline(splcat, cat.x[-1])
+s, d = dens_from_spline(splcat, [cat.x[0], cat.x[-1]])
 plt.plot(s, d)
 plt.xlabel('Arc Length')
 plt.ylabel('Mass Density')
 ```
 ![image](https://github.com/user-attachments/assets/d041a557-7c87-4411-ad80-3a1f25493801)
 
-You will probably notice that the density that was found does not perfectly match the density we defined earlier (with a density equal to arc length, you would imagine the graph to be a straight line from (0, 0) to (5, 5). This is due to an underlying property of catenaries in which the shape that is created is the same for all scalar multiples of a certain density function. In other words, a cable with a density of 5 * s will make the same shape as a cable with a density of 1 * s, assuming length, x distance, and y distance stay the same. The found arc length vs density follows this rule, which can be proved through this code:
+You will probably notice that the density that was found does not perfectly match the density we defined earlier (with a density equal to arc length, you would imagine the graph to be a straight line from (0, 0) to (5, 5)). This is due to an underlying property of catenaries in which the shape that is created is the same for all scalar multiples of a certain density function. In other words, a cable with a density of 5 * s will make the same shape as a cable with a density of 1 * s, assuming length, x distance, and y distance stay the same. The found arc length vs density follows this rule, which can be proved through this code:
 ```{python}
 # c = scalar multiple of user-defined density, e.g. found density from dens_from_spline() = c * density used to generate curve
 c = density2(5)/d[-1]
@@ -115,24 +112,36 @@ plt.plot(s, [density2(s[i]) for i in range(len(s))], linestyle='dashed', label='
 ```
 ![image](https://github.com/user-attachments/assets/b9459df7-b233-442c-af23-8edca39f5c44)
 
-### dens_from_eq() 
--- outputs arc length vs density when an exact function for the shape of the curve is known, also prints the equation of the x-coordinate vs density curve (**NOT** arc length vs density)
+### catsolver.inverse.dens_from_eq(x, shape, xrange, type="hanging") 
+-- outputs arc length vs density when an exact function for the shape of the curve is known
 | parameter, type         |description   |
 |-----------------------------|----------------------|
 |   x, sympy.Symbol: |  x-variable in the equation of the curve |
 |   shape:             |  expression that defines the shape of the curve, e.g. shape = (x-1)**2 |
-|   xdist:             |  the last x-value to be evaluated on the shape/curve, used to define the range to create (x, y) points on the shape |
+|   xrange, array of 2 floats:     |  the first and last x-value to be evaluated on the shape/curve, used to define the range to create (x, y) points on the shape |
+|   type, string:      | either "loaded" or "hanging", depending on the type of catenary you want to find the shape for. default = "hanging" |
 
-dens_from_eq() is useful if you know the shape that you want the hanging cable to make follows an easily defined function. Note that the function should start at x = 0, so you may need to shift the function using function transformations. The program will also output a warning message if the shape is not possible in the real world due to requiring negative density, but will still give a theoretical output. This is because the second derivative of the shape is negative at some point on the curve over the area being evaluated.
+dens_from_eq() is useful if you know the shape that you want the hanging cable to make follows an easily defined function. The program will also output a warning message if the shape is not possible in the real world due to requiring negative density, but will still give a theoretical output. This is because the second derivative of the shape is negative at some point on the curve over the area being evaluated.
 
 As an example, let's model the density that a cable would need to have in order to form the shape of a sin curve. In particular, we want the portion of sin(x) from pi to 2 * pi because this section is possible in the real world.
 ```{python}
+import sympy as sym
+from catsolver.inverse import dens_from_eq
+
 x = sym.Symbol('x')
-s, d = dens_from_eq(x, sym.sin(x+math.pi), math.pi)
+s, d = dens_from_eq(x, sym.sin(x), [math.pi, 2*math.pi])
 plt.plot(s, d)
 plt.xlabel('Arc Length')
 plt.ylabel('Mass Density')
 ```
 ![image](https://github.com/user-attachments/assets/18789551-e87d-4036-9140-433fed41e1b9)
+
+It is worth noting that both dens_from_spline and dens_from_eq output a standardized "parent" version of arc length vs mass density, where the average value of the mass density curve is equal to 1. This is to make it easier to compare mass densities of differently shaped curves. Any mass density that is a positive scalar times the "parent" mass density will result in the same curve. If you have your own mass density array that you would like to standardize, you can use 
+```{python}
+from catsolver.inverse import standardize
+
+standardized_density = standardize([your density array])
+```
+to do so. You can also add a second optional argument ```avg_value = {your value}``` to standardize() if you want the average value to be something other than 1.
 
 Thats all for now! More functionality may be added in the future.
