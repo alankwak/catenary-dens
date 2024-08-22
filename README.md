@@ -136,7 +136,7 @@ plt.ylabel('Mass Density')
 ```
 ![image](https://github.com/user-attachments/assets/18789551-e87d-4036-9140-433fed41e1b9)
 
-It is worth noting that both dens_from_spline and dens_from_eq output a standardized "parent" version of arc length vs mass density, where the average value of the mass density curve is equal to 1. This is to make it easier to compare mass densities of differently shaped curves. As demmonstrated earlier, any mass density that is a positive scalar times the "parent" mass density will result in the same curve. If you have your own mass density array that you would like to standardize, you can use 
+It is worth noting that both dens_from_spline and dens_from_eq output a standardized "parent" version of arc length vs mass density, where the average value of the mass density curve is equal to 1. This is to make it easier to compare mass densities of differently shaped curves. As demonstrated earlier, any mass density that is a positive scalar times the "parent" mass density will result in the same curve. If you have your own mass density array that you would like to standardize, you can use 
 ```{python}
 from catsolver.inverse import standardize
 
