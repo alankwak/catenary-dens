@@ -41,7 +41,7 @@ the program to count a curve as successful, lower values take longer/more loops 
 |  optional, default=False    |  debug, boolean:     |  if set to True, prints information about each curve generated while searching for the correct curve |
 
 ### catsolver.forward.find_loaded_catenary(dens, xdist, ydist, length, thresh=.01, max_attempts=500, debug=False)  
--- the exact same as find_catenary(), but uses type=loaded in the find_parameters() function call to solve the loaded cable diff eq (e.g. for a cable supporting a road directly beneath it)
+-- the exact same as find_catenary(), but uses type=loaded in the find_parameters() function call to solve the loaded cable diff eq (e.g. for a cable supporting a road directly beneath it). The density in this function represents the mass density of the load with respect to x, not the mass density of the cable itself.
 
 ### CatSolution Object
 All three of these modules return a ```CatSolution``` object, which has the following members:
